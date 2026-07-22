@@ -164,6 +164,40 @@ button{cursor:pointer}
   .price{font-size:18px}.add{font-size:13px}
 }
 @media(max-width:380px){.grid{grid-template-columns:1fr}}
+
+.supportBtn{
+  position:fixed;right:16px;bottom:82px;z-index:31;border:0;border-radius:999px;
+  background:#25D366;color:#06210f;padding:14px 17px;font-weight:900;
+  box-shadow:0 12px 35px rgba(0,0,0,.45)
+}
+.reviewBtn{
+  border:1px solid var(--line);background:#1c1c22;color:var(--gold2);
+  border-radius:11px;padding:10px;font-weight:800
+}
+.ratingLine{display:flex;align-items:center;gap:7px;color:var(--gold2);font-size:13px}
+.reviewModal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:70;display:none;align-items:center;justify-content:center;padding:16px}
+.reviewModal.open{display:flex}
+.reviewBox{
+  width:min(720px,100%);max-height:90vh;overflow:auto;background:#111116;
+  border:1px solid var(--line);border-radius:22px;padding:20px;position:relative
+}
+.reviewClose{position:absolute;right:14px;top:14px;border:0;border-radius:50%;width:40px;height:40px;background:#2a2a31;color:#fff;font-size:24px}
+.ratingSummary{padding:10px 0;color:var(--gold2);font-weight:900}
+.reviewList{display:flex;flex-direction:column;gap:10px;margin:10px 0 18px}
+.reviewItem{border:1px solid rgba(255,255,255,.06);background:#191920;border-radius:14px;padding:12px}
+.reviewStars{color:#f0c75e;letter-spacing:2px}
+.reviewMeta{font-size:12px;color:var(--muted);margin-top:4px}
+.reviewForm{border-top:1px solid var(--line);padding-top:14px}
+.reviewForm input,.reviewForm textarea{
+  width:100%;margin:7px 0;padding:12px;border-radius:11px;border:1px solid var(--line)
+}
+.reviewForm textarea{min-height:100px;resize:vertical}
+.starPicker{display:flex;gap:4px;margin:8px 0}
+.starPicker button{border:0;background:transparent;font-size:30px;color:#555;padding:2px}
+.starPicker button.on{color:#f0c75e}
+.reviewStatus{font-size:13px;margin-top:8px;color:var(--muted)}
+@media(max-width:600px){.supportBtn{right:10px;bottom:78px;padding:12px 14px}}
+
 </style>
 </head>
 <body>
@@ -214,6 +248,29 @@ button{cursor:pointer}
 
 <button class="cartBtn" onclick="openCart()"><span>🛒 Sepetim</span><span><span id="count">0</span> ürün</span></button>
 
+<button id="supportBtn" class="supportBtn" onclick="openSupport()">💬 WhatsApp Destek</button>
+<div id="reviewModal" class="reviewModal" onclick="if(event.target===this)closeReviewModal()">
+  <div class="reviewBox">
+    <button class="reviewClose" onclick="closeReviewModal()">×</button>
+    <h2 id="reviewProductName">Ürün Yorumları</h2>
+    <div id="ratingSummary" class="ratingSummary"></div>
+    <div id="reviewList" class="reviewList"></div>
+    <div class="reviewForm">
+      <h3>Yorum Yap</h3>
+      <div id="starPicker" class="starPicker">
+        <button type="button" data-star="1">★</button>
+        <button type="button" data-star="2">★</button>
+        <button type="button" data-star="3">★</button>
+        <button type="button" data-star="4">★</button>
+        <button type="button" data-star="5">★</button>
+      </div>
+      <input id="reviewName" placeholder="Adınız">
+      <textarea id="reviewText" placeholder="Ürün hakkındaki yorumunuz"></textarea>
+      <button class="primary" onclick="submitReview()">Yorumu Gönder</button>
+      <div id="reviewStatus" class="reviewStatus"></div>
+    </div>
+  </div>
+</div>
 <div id="drawer" class="drawer" onclick="if(event.target===this)closeCart()">
   <aside class="cart">
     <div class="cartTop"><h2>Sepetim</h2><button class="close" onclick="closeCart()">Kapat</button></div>
@@ -230,7 +287,7 @@ window.PRIME_CONFIG={
   SUPABASE_ANON_KEY:"sb_publishable_eJBVTmsWv7l0tdLx11m7BQ_KIiHaWzs",
   WHATSAPP:"905348223436"
 };
-let db,products=[],active="Tümü",special="",cart=JSON.parse(localStorage.getItem("primeCart")||"{}"),favorites=JSON.parse(localStorage.getItem("primeFavorites")||"[]");
+let db,products=[],active="Tümü",special="",currentReviewProduct=null,selectedRating=0,cart=JSON.parse(localStorage.getItem("primeCart")||"{}"),favorites=JSON.parse(localStorage.getItem("primeFavorites")||"[]");
 const cfg=window.PRIME_CONFIG;
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function money(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(Number(n)||0)}
@@ -248,6 +305,62 @@ async function load(){
 }
 function showSpecial(type){special=type;active="Tümü";render();document.getElementById("products").scrollIntoView()}
 function toggleFav(id){id=Number(id);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("primeFavorites",JSON.stringify(favorites));render()}
+
+async function getRatingSummary(productId){
+  const {data,error}=await db.from("reviews").select("rating").eq("product_id",productId).eq("is_approved",true);
+  if(error||!data?.length)return {avg:0,count:0};
+  const avg=data.reduce((s,r)=>s+Number(r.rating||0),0)/data.length;
+  return {avg,count:data.length};
+}
+function openSupport(){
+  const text=encodeURIComponent("Merhaba, Prime Kozmetik ürünleri hakkında destek almak istiyorum.");
+  window.open(`https://wa.me/${cfg.WHATSAPP}?text=${text}`,"_blank");
+}
+async function openReviewModal(productId){
+  currentReviewProduct=products.find(p=>Number(p.id)===Number(productId));
+  if(!currentReviewProduct)return;
+  selectedRating=0;paintStars();
+  reviewProductName.textContent=currentReviewProduct.name;
+  reviewName.value="";reviewText.value="";reviewStatus.textContent="";
+  reviewModal.classList.add("open");
+  await loadReviews();
+}
+function closeReviewModal(){reviewModal.classList.remove("open")}
+function paintStars(){
+  document.querySelectorAll("#starPicker button").forEach(b=>b.classList.toggle("on",Number(b.dataset.star)<=selectedRating));
+}
+async function loadReviews(){
+  const {data,error}=await db.from("reviews").select("*").eq("product_id",currentReviewProduct.id).eq("is_approved",true).order("created_at",{ascending:false});
+  const rows=data||[];
+  const avg=rows.length?rows.reduce((s,r)=>s+Number(r.rating||0),0)/rows.length:0;
+  ratingSummary.textContent=rows.length?`★ ${avg.toFixed(1)} / 5 · ${rows.length} yorum`:"Henüz yorum yapılmamış.";
+  reviewList.innerHTML=rows.length?rows.map(r=>`<div class="reviewItem">
+    <div class="reviewStars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
+    <b>${esc(r.customer_name||"Müşteri")}</b>
+    <div>${esc(r.comment||"")}</div>
+    <div class="reviewMeta">${new Date(r.created_at).toLocaleDateString("tr-TR")}</div>
+  </div>`).join(""):'<div class="empty">Bu ürün için ilk yorumu siz yapın.</div>';
+}
+async function submitReview(){
+  if(!currentReviewProduct)return;
+  const name=reviewName.value.trim(),comment=reviewText.value.trim();
+  if(!selectedRating)return reviewStatus.textContent="Lütfen 1 ile 5 arasında yıldız seçin.";
+  if(!name)return reviewStatus.textContent="Lütfen adınızı yazın.";
+  if(!comment)return reviewStatus.textContent="Lütfen yorumunuzu yazın.";
+  reviewStatus.textContent="Yorum gönderiliyor...";
+  const {error}=await db.from("reviews").insert({
+    product_id:currentReviewProduct.id,
+    customer_name:name,
+    rating:selectedRating,
+    comment,
+    is_approved:true
+  });
+  if(error){reviewStatus.textContent="Yorum gönderilemedi: "+error.message;return}
+  reviewStatus.textContent="Yorumunuz yayınlandı. Teşekkür ederiz.";
+  reviewName.value="";reviewText.value="";selectedRating=0;paintStars();
+  await loadReviews();
+}
+
 function render(){
   const q=search.value.toLowerCase().trim(),s=sort.value;
   const favTopBtn=document.getElementById("favTopBtn");
@@ -274,6 +387,8 @@ function render(){
       <div class="name">${esc(p.name)}</div>
       <div class="desc">${esc(p.description)}</div>
       <div class="meta"><div class="price">${money(p.price)}</div><div class="stock">● ${esc(p.stock||"Stokta")}</div></div>
+      <div class="ratingLine">★★★★★ <span>Yorumları gör</span></div>
+      <button class="reviewBtn" onclick="openReviewModal(${p.id})">⭐ Yorumlar ve Puanlama</button>
       <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
     </div>
   </article>`).join(""):(special==="fav"
@@ -323,6 +438,9 @@ function sendWhatsApp(){
   lines.push("━━━━━━━━━━━━━━━━━━","",`💰 *Toplam Tutar:* ${money(total)}`,"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
   window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
 }
+document.querySelectorAll("#starPicker button").forEach(btn=>{
+  btn.onclick=()=>{selectedRating=Number(btn.dataset.star);paintStars()}
+});
 document.getElementById("favTopBtn").onclick=()=>showSpecial("fav");
 init();renderCart();
 
