@@ -198,6 +198,12 @@ button{cursor:pointer}
 .reviewStatus{font-size:13px;margin-top:8px;color:var(--muted)}
 @media(max-width:600px){.supportBtn{right:10px;bottom:78px;padding:12px 14px}}
 
+
+.lowStock{font-size:11px;color:#ffb4b4;font-weight:900;text-align:right;animation:pulseStock 1.6s infinite}
+.outStock{font-size:11px;color:#ff8f8f;font-weight:900;text-align:right}
+.bestBadge{background:#f59e0b;color:#211607}
+@keyframes pulseStock{0%,100%{opacity:1}50%{opacity:.55}}
+
 </style>
 </head>
 <body>
@@ -361,32 +367,52 @@ async function submitReview(){
   await loadReviews();
 }
 
+
+function stockNumber(p){
+  const raw=String(p.stock??"").replace(",",".");
+  const m=raw.match(/\d+(\.\d+)?/);
+  return m?Number(m[0]):NaN;
+}
+function stockHtml(p){
+  const n=stockNumber(p);
+  if(Number.isFinite(n)){
+    if(n<=0)return '<div class="outStock">Tükendi</div>';
+    if(n<=5)return `<div class="lowStock">⚠ Son ${Math.floor(n)} adet kaldı</div>`;
+    return `<div class="stock">● ${Math.floor(n)} adet stokta</div>`;
+  }
+  return `<div class="stock">● ${esc(p.stock||"Stokta")}</div>`;
+}
+function isBestSeller(p){
+  return Number(p.sold_count||0)>0;
+}
+
 function render(){
   const q=search.value.toLowerCase().trim(),s=sort.value;
   const favTopBtn=document.getElementById("favTopBtn");
   if(favTopBtn) favTopBtn.textContent=`${favorites.length ? "♥" : "♡"} Favorilerim (${favorites.length})`;
-  const categories=["Tümü","✨ Yeni Gelenler","🤍 Favorilerim",...new Set(products.map(p=>p.category).filter(Boolean))];
+  const categories=["Tümü","🔥 Çok Satanlar","✨ Yeni Gelenler","🤍 Favorilerim",...new Set(products.map(p=>p.category).filter(Boolean))];
   cats.innerHTML=categories.map(c=>{
-    const on=(c===active)||((c==="✨ Yeni Gelenler"&&special==="new")||(c==="🤍 Favorilerim"&&special==="fav"));
+    const on=(c===active)||((c==="🔥 Çok Satanlar"&&special==="best")||(c==="✨ Yeni Gelenler"&&special==="new")||(c==="🤍 Favorilerim"&&special==="fav"));
     return `<button type="button" class="pill ${on?'on':''}" data-category="${esc(c)}">${esc(c)}</button>`
   }).join("");
   let list=products.filter(p=>(active==="Tümü"||p.category===active)&&(`${p.brand} ${p.name} ${p.description} ${p.category}`).toLowerCase().includes(q));
+  if(special==="best")list=list.filter(isBestSeller).sort((a,b)=>Number(b.sold_count||0)-Number(a.sold_count||0));
   if(special==="new")list=list.filter(isNew);
   if(special==="fav")list=list.filter(p=>favorites.includes(Number(p.id)));
   if(s==="low")list.sort((a,b)=>Number(a.price)-Number(b.price));
   if(s==="high")list.sort((a,b)=>Number(b.price)-Number(a.price));
   if(s==="name")list.sort((a,b)=>String(a.name).localeCompare(String(b.name),"tr"));
-  sectionTitle.textContent=special==="new"?"Yeni Gelenler":special==="fav"?"Favorilerim":active==="Tümü"?"Tüm Ürünler":active;
+  sectionTitle.textContent=special==="best"?"Çok Satanlar":special==="new"?"Yeni Gelenler":special==="fav"?"Favorilerim":active==="Tümü"?"Tüm Ürünler":active;
   resultCount.textContent=list.length+" ürün";
   grid.innerHTML=list.length?list.map(p=>`<article class="card">
-    <div class="badges">${isNew(p)?'<span class="badge">YENİ</span>':''}</div>
+    <div class="badges">${isBestSeller(p)?'<span class="badge bestBadge">ÇOK SATAN</span>':''}${isNew(p)?'<span class="badge">YENİ</span>':''}</div>
     <button class="fav ${favorites.includes(Number(p.id))?'on':''}" onclick="toggleFav(${p.id})">${favorites.includes(Number(p.id))?'♥':'♡'}</button>
     <div class="pic">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:"✦"}</div>
     <div class="content">
       <div class="brand">${esc(p.brand)}</div>
       <div class="name">${esc(p.name)}</div>
       <div class="desc">${esc(p.description)}</div>
-      <div class="meta"><div class="price">${money(p.price)}</div><div class="stock">● ${esc(p.stock||"Stokta")}</div></div>
+      <div class="meta"><div class="price">${money(p.price)}</div>${stockHtml(p)}</div>
       <div class="ratingLine">★★★★★ <span>Yorumları gör</span></div>
       <button class="reviewBtn" onclick="openReviewModal(${p.id})">⭐ Yorumlar ve Puanlama</button>
       <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
@@ -400,7 +426,8 @@ function render(){
   renderCart();
 }
 function chooseCategory(c){
-  if(c==="✨ Yeni Gelenler"){special="new";active="Tümü"}
+  if(c==="🔥 Çok Satanlar"){special="best";active="Tümü"}
+  else if(c==="✨ Yeni Gelenler"){special="new";active="Tümü"}
   else if(c==="🤍 Favorilerim"){special="fav";active="Tümü"}
   else{active=c;special=""}
   render();
@@ -424,7 +451,7 @@ function renderCart(){
 }
 function openCart(){drawer.classList.add("open");renderCart()}
 function closeCart(){drawer.classList.remove("open")}
-function sendWhatsApp(){
+async function sendWhatsApp(){
   const lines=["🛍️ *PRIME KOZMETİK*","","━━━━━━━━━━━━━━━━━━","","📦 *Sipariş Talebi*",""];
   let total=0,has=false;
   Object.entries(cart).forEach(([id,qty])=>{
@@ -435,6 +462,11 @@ function sendWhatsApp(){
     lines.push(`• ${name}`,`  ×${qty} — ${money(subtotal)}`,"");
   });
   if(!has)return alert("Sepetiniz boş.");
+  try{
+    for(const [id,qty] of Object.entries(cart)){
+      await db.rpc("increment_product_sales",{p_product_id:Number(id),p_quantity:Number(qty)});
+    }
+  }catch(e){console.warn("Satış sayacı güncellenemedi",e)}
   lines.push("━━━━━━━━━━━━━━━━━━","",`💰 *Toplam Tutar:* ${money(total)}`,"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
   window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
 }
