@@ -1,0 +1,5 @@
+1. GitHub'da primekozmetik/prime-kozmetik deposunu aç.
+2. Dosya ekle > Dosyaları yükle seç.
+3. Bu klasördeki index.html, manifest.webmanifest ve sw.js dosyalarını yükle.
+4. Alttaki Değişiklikleri kaydet / Commit changes butonuna bas.
+5. 1-3 dakika sonra siteyi Ctrl+F5 ile yenile.

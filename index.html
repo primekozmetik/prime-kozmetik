@@ -1,289 +1,318 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#111116"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="manifest.webmanifest"><title>Prime Kozmetik | Güncel Fiyat Listesi</title>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Prime Kozmetik | Premium Katalog</title>
 <style>
 :root{
-  --gold:#d8b36a;--gold2:#f3dda9;--bg:#09090b;--panel:#15151a;--panel2:#1c1c22;
-  --text:#fffaf0;--muted:#bdb6aa;--line:rgba(216,179,106,.24);--danger:#ff9ca5;
-  --green:#25D366;--shadow:0 14px 40px rgba(0,0,0,.35)
+  --bg:#08080a;--panel:#111116;--panel2:#18181f;--gold:#d9b66f;--gold2:#f4dfae;
+  --text:#fffaf2;--muted:#aaa397;--line:rgba(217,182,111,.22);--green:#25D366;
+  --shadow:0 18px 55px rgba(0,0,0,.38)
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;background:
-  radial-gradient(circle at top right,rgba(216,179,106,.12),transparent 34%),
-  linear-gradient(180deg,#09090b,#111116 45%,#0d0d11);
-  color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh;
-  -webkit-font-smoothing:antialiased;padding-bottom:96px
+  margin:0;color:var(--text);font-family:Arial,Helvetica,sans-serif;min-height:100vh;
+  background:
+    radial-gradient(circle at 90% 0,rgba(217,182,111,.13),transparent 28%),
+    linear-gradient(180deg,#070709,#101014 55%,#08080a);
+  padding-bottom:92px
 }
 button,input,select{font:inherit}
-button{-webkit-tap-highlight-color:transparent}
-.wrap{max-width:1180px;margin:auto;padding:16px}
+button{cursor:pointer}
+.shell{max-width:1240px;margin:auto;padding:14px}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:13px 15px;margin-bottom:12px;border:1px solid var(--line);
+  border-radius:18px;background:rgba(10,10,13,.88);backdrop-filter:blur(18px);
+  box-shadow:var(--shadow)
+}
+.brandLogo{font:700 23px Georgia,serif;letter-spacing:3px;color:var(--gold2)}
+.brandSub{font-size:11px;color:var(--muted);margin-top:2px}
+.topAction{
+  border:1px solid var(--line);background:#191920;color:var(--gold2);border-radius:12px;
+  padding:10px 13px;font-weight:800
+}
 .hero{
-  position:sticky;top:0;z-index:8;
-  border:1px solid var(--line);background:rgba(14,14,18,.92);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)
+  min-height:290px;border:1px solid var(--line);border-radius:28px;overflow:hidden;
+  display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:20px;padding:34px;
+  background:
+    radial-gradient(circle at 85% 20%,rgba(244,223,174,.2),transparent 22%),
+    linear-gradient(135deg,#131319,#0b0b0e 58%,#201a11);
+  box-shadow:var(--shadow);position:relative
 }
-.heroTop{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{font:700 26px Georgia,serif;color:var(--gold2);letter-spacing:3px}
-.subtitle{color:var(--muted);font-size:13px;margin-top:4px}
-.tools{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-top:15px}
-.tools input,.tools select{
-  width:100%;padding:14px 15px;border:1px solid var(--line);border-radius:14px;
-  background:#fff;color:#111;outline:none;min-height:48px
+.hero:after{
+  content:"";position:absolute;width:260px;height:260px;border-radius:50%;
+  right:-80px;bottom:-100px;border:1px solid rgba(244,223,174,.28)
 }
-.cats{
-  display:flex;gap:9px;overflow-x:auto;margin:0 0 14px;padding:2px 2px 8px;
-  scrollbar-width:none;position:sticky;top:126px;z-index:7;
-  background:linear-gradient(180deg,rgba(9,9,11,.96),rgba(9,9,11,.83),transparent)
+.kicker{font-size:11px;letter-spacing:3px;color:var(--gold2);font-weight:900}
+.hero h1{font:700 43px/1.08 Georgia,serif;margin:12px 0;color:var(--gold2);max-width:690px}
+.hero p{color:var(--muted);line-height:1.65;max-width:640px;margin:0}
+.heroBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.primary,.secondary{
+  border:0;border-radius:13px;padding:13px 17px;font-weight:900;min-height:48px
 }
-.cats::-webkit-scrollbar{display:none}
-.cat{
-  flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:var(--panel);
-  color:var(--muted);padding:11px 15px;border-radius:999px;cursor:pointer;min-height:44px
+.primary{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17120a}
+.secondary{background:#191920;color:var(--gold2);border:1px solid var(--line)}
+.heroVisual{
+  display:flex;align-items:center;justify-content:center;min-height:220px
 }
-.cat.on{background:var(--gold);color:#17120a;font-weight:900}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.heroOrb{
+  width:210px;height:210px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font:700 38px Georgia,serif;color:var(--gold2);letter-spacing:4px;
+  background:radial-gradient(circle at 35% 30%,#453a25,#17130e 58%,#08080a);
+  border:1px solid rgba(244,223,174,.35);box-shadow:0 0 80px rgba(217,182,111,.16)
+}
+.features{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0
+}
+.feature{
+  border:1px solid var(--line);border-radius:16px;padding:15px;background:rgba(255,255,255,.025)
+}
+.feature b{display:block;color:var(--gold2);margin-bottom:4px}
+.feature span{font-size:12px;color:var(--muted)}
+.toolbar{
+  position:sticky;top:78px;z-index:16;margin:12px 0;padding:12px;border:1px solid var(--line);
+  border-radius:18px;background:rgba(11,11,14,.9);backdrop-filter:blur(14px)
+}
+.searchRow{display:grid;grid-template-columns:1fr 190px;gap:10px}
+.searchRow input,.searchRow select{
+  width:100%;min-height:48px;border-radius:13px;border:1px solid var(--line);
+  background:#fff;color:#111;padding:12px 14px;outline:none
+}
+.quick{display:flex;gap:8px;overflow:auto;margin-top:10px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.pill{
+  flex:0 0 auto;border:1px solid var(--line);background:#18181f;color:var(--muted);
+  border-radius:999px;padding:10px 14px;font-weight:800;white-space:nowrap
+}
+.pill.on{background:var(--gold);color:#17120a}
+.sectionHead{display:flex;justify-content:space-between;align-items:end;margin:18px 2px 12px}
+.sectionHead h2{font:700 27px Georgia,serif;color:var(--gold2);margin:0}
+.sectionHead span{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{
-  background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
-  border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 25px rgba(0,0,0,.22)
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:21px;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));display:flex;flex-direction:column;
+  box-shadow:0 10px 30px rgba(0,0,0,.24);transition:.2s transform,.2s border-color
 }
-.pic{
-  aspect-ratio:1/1;background:#f4f4f2;display:flex;align-items:center;justify-content:center;
-  font-size:44px;color:var(--gold2);overflow:hidden
+.card:hover{transform:translateY(-3px);border-color:rgba(244,223,174,.45)}
+.pic{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:contain}
+.badges{position:absolute;top:10px;left:10px;z-index:3;display:flex;gap:6px}
+.badge{font-size:9px;font-weight:900;border-radius:999px;padding:6px 8px;background:var(--gold);color:#17120a}
+.fav{
+  position:absolute;right:10px;top:10px;z-index:4;width:39px;height:39px;border:0;border-radius:50%;
+  background:rgba(8,8,10,.8);color:#fff;font-size:20px
 }
-.pic img{width:100%;height:100%;object-fit:contain;background:#fff}
+.fav.on{color:#ff9ebb}
 .content{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
-.brand{font-size:11px;letter-spacing:1.4px;color:var(--gold2);font-weight:900;text-transform:uppercase}
-.name{font-weight:900;line-height:1.3;font-size:15px;min-height:39px}
-.desc{color:var(--muted);font-size:13px;line-height:1.42;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.price{font-size:22px;color:var(--gold2);font-weight:900;margin-top:2px}
-.stock{font-size:12px;color:#94e0ad}
+.brand{font-size:10px;letter-spacing:1.6px;color:var(--gold2);font-weight:900;text-transform:uppercase}
+.name{font-weight:900;line-height:1.35;min-height:41px}
+.desc{font-size:12px;color:var(--muted);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.meta{display:flex;justify-content:space-between;align-items:end;gap:8px;margin-top:auto}
+.price{font-size:22px;color:var(--gold2);font-weight:900}
+.stock{font-size:11px;color:#8ee0aa;text-align:right}
 .add{
-  margin-top:auto;background:var(--gold);color:#17120a;border:0;border-radius:12px;
-  padding:13px;font-weight:900;cursor:pointer;min-height:46px
+  margin-top:3px;border:0;border-radius:12px;padding:13px;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#17120a;font-weight:900;min-height:46px
 }
-.add:active{transform:scale(.99)}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:55px 15px}
 .cartBtn{
-  position:fixed;left:14px;right:14px;bottom:14px;z-index:14;
-  background:linear-gradient(135deg,var(--gold2),var(--gold));color:#17120a;border:0;
-  border-radius:16px;padding:15px 18px;font-weight:900;box-shadow:0 12px 40px #000;
-  display:flex;justify-content:space-between;align-items:center;min-height:56px
+  position:fixed;left:14px;right:14px;bottom:12px;z-index:30;max-width:760px;margin:auto;
+  border:0;border-radius:17px;padding:15px 18px;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#17120a;font-weight:900;box-shadow:0 15px 45px rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:space-between
 }
 .drawer{
-  position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.72);display:none;
-  align-items:flex-end;justify-content:center
+  position:fixed;inset:0;background:rgba(0,0,0,.74);z-index:40;display:none;
+  justify-content:flex-end
 }
 .drawer.open{display:flex}
 .cart{
-  width:min(620px,100%);max-height:88vh;background:#111116;padding:18px;
-  overflow:auto;border:1px solid var(--line);border-radius:24px 24px 0 0;
-  box-shadow:0 -20px 60px rgba(0,0,0,.5)
+  width:min(470px,100%);height:100%;overflow:auto;background:#0f0f14;padding:18px;
+  border-left:1px solid var(--line)
 }
-.cartTop{display:flex;justify-content:space-between;align-items:center;position:sticky;top:-18px;background:#111116;padding:8px 0 10px;z-index:2}
-.close{background:#2b2b33;color:#fff;border:0;border-radius:11px;padding:11px 14px}
+.cartTop{display:flex;align-items:center;justify-content:space-between;position:sticky;top:-18px;background:#0f0f14;padding:10px 0;z-index:3}
+.close{border:0;border-radius:10px;padding:10px 13px;background:#292931;color:#fff}
 .cartItem{
-  display:grid;grid-template-columns:1fr auto;gap:10px;background:#1b1b21;
-  padding:12px;border-radius:14px;margin:10px 0;border:1px solid rgba(255,255,255,.04)
+  display:grid;grid-template-columns:1fr auto;gap:10px;border:1px solid rgba(255,255,255,.05);
+  border-radius:15px;background:#191920;padding:11px;margin:10px 0
 }
-.qty{display:flex;align-items:center;gap:9px;margin-top:10px}
-.qty button,.remove{border:0;border-radius:9px;padding:8px 11px;cursor:pointer;min-width:38px;min-height:38px}
+.cartInfo{display:flex;gap:10px}
+.thumb{width:62px;height:62px;border-radius:11px;background:#fff;object-fit:contain}
+.qty{display:flex;gap:8px;align-items:center;margin-top:9px}
+.qty button,.remove{border:0;border-radius:8px;min-width:36px;min-height:36px}
 .qty button{background:#303039;color:#fff}
-.remove{background:#4a2025;color:#ffd7dd}
-.total{font-size:22px;font-weight:900;color:var(--gold2);padding:14px 0}
-.wa{width:100%;border:0;border-radius:13px;background:var(--green);color:#071f0f;padding:15px;font-weight:900;cursor:pointer;min-height:50px}
-.empty{text-align:center;color:var(--muted);padding:42px 16px;grid-column:1/-1}
-.installBtn{
-  border:1px solid var(--line);background:#1b1b21;color:var(--gold2);
-  border-radius:12px;padding:10px 12px;font-weight:800;display:none
+.remove{background:#4a2025;color:#ffd5da;padding:8px 10px}
+.total{font-size:23px;font-weight:900;color:var(--gold2);padding:14px 0}
+.wa{width:100%;border:0;border-radius:13px;background:var(--green);color:#06210f;padding:15px;font-weight:900}
+@media(max-width:950px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hero{grid-template-columns:1fr}.heroVisual{display:none}
 }
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:560px){
-  .wrap{padding:10px}
-  .hero{padding:14px;border-radius:18px}
-  .logo{font-size:21px;letter-spacing:2px}
-  .subtitle{font-size:12px}
-  .tools{grid-template-columns:1fr}
-  .tools input,.tools select{min-height:46px}
-  .cats{top:118px}
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .card{border-radius:16px}
-  .content{padding:11px;gap:7px}
-  .brand{font-size:10px}
-  .name{font-size:13px;min-height:34px}
-  .desc{font-size:12px;-webkit-line-clamp:2}
-  .price{font-size:18px}
-  .stock{font-size:11px}
-  .add{padding:11px 8px;font-size:13px}
-  .cartBtn{left:10px;right:10px;bottom:10px}
+@media(max-width:700px){
+  .shell{padding:9px}.topbar{border-radius:15px}.brandLogo{font-size:19px}
+  .hero{min-height:auto;padding:22px;border-radius:22px}.hero h1{font-size:31px}
+  .features{grid-template-columns:1fr}.searchRow{grid-template-columns:1fr}
+  .toolbar{top:70px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .content{padding:11px}.name{font-size:13px;min-height:36px}.desc{-webkit-line-clamp:2}
+  .price{font-size:18px}.add{font-size:13px}
 }
-@media(max-width:380px){
-  .grid{grid-template-columns:1fr}
-  .name{font-size:15px}
-}
-
-.campaign{
-  display:flex;align-items:center;justify-content:space-between;gap:20px;
-  margin:4px 0 14px;padding:24px;border-radius:22px;border:1px solid var(--line);
-  background:linear-gradient(135deg,rgba(216,179,106,.18),rgba(255,255,255,.025));
-  box-shadow:var(--shadow)
-}
-.campaign h1{font:700 30px Georgia,serif;margin:8px 0;color:var(--gold2);max-width:620px}
-.campaign p{margin:0;color:var(--muted);line-height:1.5}
-.campaignTag{font-size:11px;letter-spacing:2px;font-weight:900;color:var(--gold2)}
-.campaign button,.quick button{
-  border:1px solid var(--line);background:var(--gold);color:#17120a;
-  border-radius:13px;padding:13px 16px;font-weight:900;cursor:pointer
-}
-.quick{display:flex;gap:9px;overflow:auto;margin-bottom:13px;scrollbar-width:none}
-.quick::-webkit-scrollbar{display:none}
-.quick button{white-space:nowrap;background:#17171d;color:var(--gold2);min-height:44px}
-.card{position:relative}
-.badges{position:absolute;left:9px;top:9px;z-index:2;display:flex;gap:6px;flex-wrap:wrap}
-.badge{font-size:10px;font-weight:900;padding:6px 8px;border-radius:999px;background:var(--gold);color:#17120a}
-.fav{
-  position:absolute;right:9px;top:9px;z-index:3;border:0;background:rgba(17,17,22,.82);
-  color:#fff;border-radius:999px;width:38px;height:38px;font-size:18px;cursor:pointer
-}
-.fav.on{color:#ff9fba}
-.cartThumb{width:58px;height:58px;border-radius:10px;object-fit:contain;background:#fff;margin-right:9px}
-.cartInfo{display:flex;align-items:flex-start}
-.productCount{font-size:12px;color:var(--muted);margin-top:3px}
-@media(max-width:560px){
-  .campaign{padding:18px;align-items:flex-start;flex-direction:column}
-  .campaign h1{font-size:24px}
-  .campaign button{width:100%}
-}
-
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<section class="hero"><div class="heroTop"><div><div class="logo">PRIME KOZMETİK</div><div class="subtitle">Güncel fiyat listesi • Orijinal ürünler • Kolay sipariş</div></div><button id="installBtn" class="installBtn">Uygulamayı Yükle</button></div>
-<div class="tools"><input id="search" placeholder="Ürün veya marka ara..." oninput="render()"><select id="sort" onchange="render()"><option value="">Sıralama</option><option value="low">Fiyat: Artan</option><option value="high">Fiyat: Azalan</option><option value="name">İsme göre</option></select></div></section>
-<section class="campaign">
+<div class="shell">
+<header class="topbar">
+  <div><div class="brandLogo">PRIME KOZMETİK</div><div class="brandSub">Seçkin güzellik ve bakım ürünleri</div></div>
+  <button class="topAction" onclick="openCart()">🛒 Sepet</button>
+</header>
+
+<section class="hero">
   <div>
-    <span class="campaignTag">PRIME KOZMETİK</span>
-    <h1>Güzelliğinize değer katan seçkin ürünler</h1>
-    <p>Güncel stok, güvenli alışveriş ve WhatsApp üzerinden kolay sipariş.</p>
+    <div class="kicker">PREMIUM GÜZELLİK DENEYİMİ</div>
+    <h1>Güzelliğinize değer katan seçkin ürünler.</h1>
+    <p>Güncel fiyatlar, orijinal ürünler ve WhatsApp üzerinden kolay sipariş. Yeni eklenen ürünler yönetim panelinden otomatik olarak burada görünür.</p>
+    <div class="heroBtns">
+      <button class="primary" onclick="document.getElementById('products').scrollIntoView()">Ürünleri İncele</button>
+      <button class="secondary" onclick="showSpecial('new')">Yeni Gelenler</button>
+    </div>
   </div>
-  <button onclick="document.getElementById('grid').scrollIntoView()">Ürünleri İncele</button>
+  <div class="heroVisual"><div class="heroOrb">PRIME</div></div>
 </section>
-<section class="quick">
-  <button onclick="showSpecial('new')">✨ Yeni Gelenler</button>
-  <button onclick="showSpecial('fav')">🤍 Favorilerim</button>
-  <button onclick="active='Tümü';special='';render()">🛍️ Tüm Ürünler</button>
+
+<section class="features">
+  <div class="feature"><b>Orijinal Ürünler</b><span>Güvenilir ve özenle seçilmiş ürünler.</span></div>
+  <div class="feature"><b>Kolay Sipariş</b><span>Sepetini tek mesajla WhatsApp'a gönder.</span></div>
+  <div class="feature"><b>Güncel Stok</b><span>Yönetim panelindeki değişiklikler otomatik yansır.</span></div>
 </section>
-<div id="cats" class="cats"></div><main id="grid" class="grid"><div class="empty">Ürünler yükleniyor…</div></main>
+
+<section class="toolbar">
+  <div class="searchRow">
+    <input id="search" placeholder="Ürün veya marka ara..." oninput="render()">
+    <select id="sort" onchange="render()">
+      <option value="">Sıralama</option>
+      <option value="low">Fiyat: Artan</option>
+      <option value="high">Fiyat: Azalan</option>
+      <option value="name">İsme göre</option>
+    </select>
+  </div>
+  <div id="cats" class="quick"></div>
+</section>
+
+<div class="sectionHead" id="products"><div><h2 id="sectionTitle">Tüm Ürünler</h2><span id="resultCount">Ürünler yükleniyor...</span></div></div>
+<main id="grid" class="grid"><div class="empty">Ürünler yükleniyor…</div></main>
 </div>
+
 <button class="cartBtn" onclick="openCart()"><span>🛒 Sepetim</span><span><span id="count">0</span> ürün</span></button>
-<div id="drawer" class="drawer" onclick="if(event.target===this)closeCart()"><aside class="cart"><div class="cartTop"><h2>Sepetim</h2><button class="close" onclick="closeCart()">Kapat</button></div><div id="cartItems"></div><div id="total" class="total"></div><button class="wa" onclick="sendWhatsApp()">Sepeti WhatsApp'tan Gönder</button></aside></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-window.PRIME_CONFIG = {
-  SUPABASE_URL: "https://omuwvdhjleovljatkzun.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_eJBVTmsWv7l0tdLx11m7BQ_KIiHaWzs",
-  WHATSAPP: "905348223436"
-};
-</script>
+
+<div id="drawer" class="drawer" onclick="if(event.target===this)closeCart()">
+  <aside class="cart">
+    <div class="cartTop"><h2>Sepetim</h2><button class="close" onclick="closeCart()">Kapat</button></div>
+    <div id="cartItems"></div>
+    <div id="total" class="total"></div>
+    <button class="wa" onclick="sendWhatsApp()">WhatsApp ile Sipariş Ver</button>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-let db,products=[],cart=JSON.parse(localStorage.getItem("primeCart")||"{}"),favorites=JSON.parse(localStorage.getItem("primeFavorites")||"[]"),active="Tümü",special="";
-const cfg=window.PRIME_CONFIG||{};
+window.PRIME_CONFIG={
+  SUPABASE_URL:"https://omuwvdhjleovljatkzun.supabase.co",
+  SUPABASE_ANON_KEY:"sb_publishable_eJBVTmsWv7l0tdLx11m7BQ_KIiHaWzs",
+  WHATSAPP:"905348223436"
+};
+let db,products=[],active="Tümü",special="",cart=JSON.parse(localStorage.getItem("primeCart")||"{}"),favorites=JSON.parse(localStorage.getItem("primeFavorites")||"[]");
+const cfg=window.PRIME_CONFIG;
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function money(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(Number(n)||0)}
+function isNew(p){return p.created_at&&(Date.now()-new Date(p.created_at).getTime()<1000*60*60*24*30)}
 async function init(){
- if(!cfg.SUPABASE_URL||cfg.SUPABASE_URL.includes("BURAYA")){grid.innerHTML='<div class="empty">Bağlantı ayarları yapılmamış.</div>';return}
- db=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);await load();
- db.channel("public-products").on("postgres_changes",{event:"*",schema:"public",table:"products"},load).subscribe();
- setInterval(load,15000);
+  db=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+  await load();
+  db.channel("products-live").on("postgres_changes",{event:"*",schema:"public",table:"products"},load).subscribe();
+  setInterval(load,20000);
 }
-async function load(){const {data,error}=await db.from("products").select("*").order("created_at",{ascending:false});if(error){grid.innerHTML='<div class="empty">Ürünler alınamadı.</div>';return}products=data||[];render()}
-
-function isNew(p){
-  if(!p.created_at) return false;
-  return (Date.now()-new Date(p.created_at).getTime()) < 1000*60*60*24*30;
+async function load(){
+  const {data,error}=await db.from("products").select("*").order("created_at",{ascending:false});
+  if(error){grid.innerHTML='<div class="empty">Ürünler alınamadı. Lütfen bağlantıyı kontrol edin.</div>';return}
+  products=data||[];render();
 }
-function toggleFav(id){
-  id=Number(id);
-  favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
-  localStorage.setItem("primeFavorites",JSON.stringify(favorites));
-  render();
-}
-function showSpecial(type){special=type;active="Tümü";render();document.getElementById("grid").scrollIntoView()}
-
+function showSpecial(type){special=type;active="Tümü";render();document.getElementById("products").scrollIntoView()}
+function toggleFav(id){id=Number(id);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("primeFavorites",JSON.stringify(favorites));render()}
 function render(){
- const q=search.value.toLowerCase().trim(),s=sort.value;
- const categories=["Tümü",...new Set(products.map(p=>p.category))];
- cats.innerHTML=categories.map(c=>`<button class="cat ${c===active?'on':''}" onclick="active=${JSON.stringify(c)};render()">${esc(c)}</button>`).join("");
- let list=products.filter(p=>(active==="Tümü"||p.category===active)&&(`${p.brand} ${p.name} ${p.description} ${p.category}`).toLowerCase().includes(q));
-  if(special==="new") list=list.filter(isNew);
-  if(special==="fav") list=list.filter(p=>favorites.includes(Number(p.id)));
- if(s==="low")list.sort((a,b)=>a.price-b.price);if(s==="high")list.sort((a,b)=>b.price-a.price);if(s==="name")list.sort((a,b)=>a.name.localeCompare(b.name,"tr"));
- grid.innerHTML=list.length?list.map(p=>`<article class="card">
-  <div class="badges">${isNew(p)?'<span class="badge">YENİ</span>':''}</div>
-  <button class="fav ${favorites.includes(Number(p.id))?'on':''}" onclick="toggleFav(${p.id})">${favorites.includes(Number(p.id))?'♥':'♡'}</button>
-  <div class="pic">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:"✦"}</div>
-  <div class="content">
-    <div class="brand">${esc(p.brand)}</div>
-    <div class="name">${esc(p.name)}</div>
-    <div class="desc">${esc(p.description)}</div>
-    <div class="price">${money(p.price)}</div>
-    <div class="stock">● ${esc(p.stock||"Stokta")}</div>
-    <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
-  </div>
-</article>`).join(""):'<div class="empty">Ürün bulunamadı.</div>';
- renderCart();
+  const q=search.value.toLowerCase().trim(),s=sort.value;
+  const categories=["Tümü","✨ Yeni Gelenler","🤍 Favorilerim",...new Set(products.map(p=>p.category).filter(Boolean))];
+  cats.innerHTML=categories.map(c=>{
+    const on=(c===active)||((c==="✨ Yeni Gelenler"&&special==="new")||(c==="🤍 Favorilerim"&&special==="fav"));
+    return `<button class="pill ${on?'on':''}" onclick="chooseCategory(${JSON.stringify(c)})">${esc(c)}</button>`
+  }).join("");
+  let list=products.filter(p=>(active==="Tümü"||p.category===active)&&(`${p.brand} ${p.name} ${p.description} ${p.category}`).toLowerCase().includes(q));
+  if(special==="new")list=list.filter(isNew);
+  if(special==="fav")list=list.filter(p=>favorites.includes(Number(p.id)));
+  if(s==="low")list.sort((a,b)=>Number(a.price)-Number(b.price));
+  if(s==="high")list.sort((a,b)=>Number(b.price)-Number(a.price));
+  if(s==="name")list.sort((a,b)=>String(a.name).localeCompare(String(b.name),"tr"));
+  sectionTitle.textContent=special==="new"?"Yeni Gelenler":special==="fav"?"Favorilerim":active==="Tümü"?"Tüm Ürünler":active;
+  resultCount.textContent=list.length+" ürün";
+  grid.innerHTML=list.length?list.map(p=>`<article class="card">
+    <div class="badges">${isNew(p)?'<span class="badge">YENİ</span>':''}</div>
+    <button class="fav ${favorites.includes(Number(p.id))?'on':''}" onclick="toggleFav(${p.id})">${favorites.includes(Number(p.id))?'♥':'♡'}</button>
+    <div class="pic">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:"✦"}</div>
+    <div class="content">
+      <div class="brand">${esc(p.brand)}</div>
+      <div class="name">${esc(p.name)}</div>
+      <div class="desc">${esc(p.description)}</div>
+      <div class="meta"><div class="price">${money(p.price)}</div><div class="stock">● ${esc(p.stock||"Stokta")}</div></div>
+      <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
+    </div>
+  </article>`).join(""):'<div class="empty">Bu bölümde ürün bulunamadı.</div>';
+  renderCart();
+}
+function chooseCategory(c){
+  if(c==="✨ Yeni Gelenler"){special="new";active="Tümü"}
+  else if(c==="🤍 Favorilerim"){special="fav";active="Tümü"}
+  else{active=c;special=""}
+  render();
 }
 function addCart(id){cart[id]=(cart[id]||0)+1;saveCart();openCart()}
 function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart()}
 function removeItem(id){delete cart[id];saveCart()}
 function saveCart(){localStorage.setItem("primeCart",JSON.stringify(cart));renderCart()}
 function renderCart(){
- let total=0,count=0,html="";
- Object.entries(cart).forEach(([id,qty])=>{const p=products.find(x=>x.id===Number(id));if(!p)return;total+=Number(p.price)*qty;count+=qty;html+=`<div class="cartItem"><div class="cartInfo">${p.image?`<img class="cartThumb" src="${esc(p.image)}" alt="">`:''}<div><b>${esc(p.name)}</b><div class="muted">${money(p.price)} × ${qty}</div><div class="qty"><button onclick="changeQty(${id},-1)">−</button><b>${qty}</b><button onclick="changeQty(${id},1)">+</button></div></div></div><button class="remove" onclick="removeItem(${id})">Sil</button></div>`});
- cartItems.innerHTML=html||'<div class="empty">Sepetiniz boş.</div>';document.getElementById("total").textContent="Toplam: "+money(total);countEl=document.getElementById("count");countEl.textContent=count;
+  let total=0,count=0,html="";
+  Object.entries(cart).forEach(([id,qty])=>{
+    const p=products.find(x=>Number(x.id)===Number(id));if(!p)return;
+    total+=Number(p.price)*qty;count+=qty;
+    html+=`<div class="cartItem"><div class="cartInfo">${p.image?`<img class="thumb" src="${esc(p.image)}" alt="">`:''}<div><b>${esc(p.name)}</b><div class="brand">${esc(p.brand)}</div><div class="qty"><button onclick="changeQty(${id},-1)">−</button><b>${qty}</b><button onclick="changeQty(${id},1)">+</button></div></div></div><button class="remove" onclick="removeItem(${id})">Sil</button></div>`
+  });
+  cartItems.innerHTML=html||'<div class="empty">Sepetiniz boş.</div>';
+  totalEl=document.getElementById("total");totalEl.textContent="Toplam: "+money(total);
+  countEl=document.getElementById("count");countEl.textContent=count;
 }
-function openCart(){drawer.classList.add("open");renderCart()}function closeCart(){drawer.classList.remove("open")}
+function openCart(){drawer.classList.add("open");renderCart()}
+function closeCart(){drawer.classList.remove("open")}
 function sendWhatsApp(){
- const lines=["🛍️ *PRIME KOZMETİK*","","━━━━━━━━━━━━━━━━━━","","📦 *Sipariş Talebi*",""];
- let total=0,has=false;
- Object.entries(cart).forEach(([id,qty])=>{
-   const p=products.find(x=>x.id===Number(id)); if(!p)return;
-   has=true;
-   const t=Number(p.price)*qty; total+=t;
-   let name=(p.name||"").trim();
-   const brand=(p.brand||"").trim();
-   if(brand && name.toLowerCase().startsWith(brand.toLowerCase())) name=name.substring(brand.length).trim();
-   lines.push(`• ${name}`);
-   lines.push(`  ×${qty} — ${money(t)}`);
-   lines.push("");
- });
- if(!has){alert("Sepetiniz boş.");return;}
- lines.push("━━━━━━━━━━━━━━━━━━","","💰 *Toplam Tutar:* "+money(total),"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
- window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("
-"))}`,"_blank");
+  const lines=["🛍️ *PRIME KOZMETİK*","","━━━━━━━━━━━━━━━━━━","","📦 *Sipariş Talebi*",""];
+  let total=0,has=false;
+  Object.entries(cart).forEach(([id,qty])=>{
+    const p=products.find(x=>Number(x.id)===Number(id));if(!p)return;
+    has=true;const subtotal=Number(p.price)*qty;total+=subtotal;
+    let name=String(p.name||"").trim(),brand=String(p.brand||"").trim();
+    if(brand&&name.toLowerCase().startsWith(brand.toLowerCase()))name=name.slice(brand.length).trim();
+    lines.push(`• ${name}`,`  ×${qty} — ${money(subtotal)}`,"");
+  });
+  if(!has)return alert("Sepetiniz boş.");
+  lines.push("━━━━━━━━━━━━━━━━━━","",`💰 *Toplam Tutar:* ${money(total)}`,"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
+  window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
 }
 init();renderCart();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
-<script>
-let deferredPrompt=null;
-window.addEventListener("beforeinstallprompt",(e)=>{
-  e.preventDefault();deferredPrompt=e;
-  const b=document.getElementById("installBtn");if(b)b.style.display="block";
-});
-document.getElementById("installBtn")?.addEventListener("click",async()=>{
-  if(!deferredPrompt)return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt=null;
-  document.getElementById("installBtn").style.display="none";
-});
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
-}
-</script>
-
-</body></html>
+</body>
+</html>
