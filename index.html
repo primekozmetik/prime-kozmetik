@@ -204,6 +204,8 @@ button{cursor:pointer}
 .bestBadge{background:#f59e0b;color:#211607}
 @keyframes pulseStock{0%,100%{opacity:1}50%{opacity:.55}}
 
+
+.accountModal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;display:none;align-items:center;justify-content:center;padding:16px}.accountModal.open{display:flex}.accountBox{width:min(680px,100%);max-height:92vh;overflow:auto;background:#111116;border:1px solid var(--line);border-radius:22px;padding:20px}.accountGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.accountBox input,.accountBox textarea,.accountBox select{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);margin:6px 0}.accountBox textarea{min-height:90px}.accountActions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.addressCard{border:1px solid var(--line);background:#191920;border-radius:14px;padding:12px;margin:10px 0}.muted{color:var(--muted);font-size:12px}@media(max-width:600px){.accountGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -211,6 +213,7 @@ button{cursor:pointer}
 <header class="topbar">
   <div><div class="brandLogo">PRIME KOZMETİK</div><div class="brandSub">Seçkin güzellik ve bakım ürünleri</div></div>
   <div style="display:flex;gap:8px">
+      <button id="accountTopBtn" type="button" class="topAction" onclick="openAccount()">👤 Giriş Yap</button>
       <button id="favTopBtn" type="button" class="topAction">♡ Favorilerim (0)</button>
       <button id="cartTopBtn" type="button" class="topAction" onclick="openCart()">🛒 Sepet (0)</button>
     </div>
@@ -277,12 +280,14 @@ button{cursor:pointer}
     </div>
   </div>
 </div>
+
+<div id="accountModal" class="accountModal" onclick="if(event.target===this)closeAccount()"><div class="accountBox"><div class="cartTop"><h2>Hesabım</h2><button class="close" onclick="closeAccount()">Kapat</button></div><div id="loggedOutView"><p class="muted">Google hesabınızla güvenli şekilde giriş yapın.</p><button class="primary" onclick="loginGoogle()">Google ile Devam Et</button></div><div id="loggedInView" style="display:none"><div id="userEmail" class="muted"></div><div class="accountActions"><button class="secondary" onclick="showAccountTab('profile')">Profilim</button><button class="secondary" onclick="showAccountTab('addresses')">Adreslerim</button><button class="secondary" onclick="showAccountTab('orders')">Siparişlerim</button><button class="close" onclick="logoutUser()">Çıkış Yap</button></div><div id="profileTab"><div class="accountGrid"><input id="profileName" placeholder="Ad Soyad"><input id="profilePhone" placeholder="Telefon"></div><button class="primary" onclick="saveProfile()">Bilgileri Kaydet</button></div><div id="addressesTab" style="display:none"><h3>Teslimat Adresi</h3><input id="addressTitle" placeholder="Adres başlığı (Ev, İş)"><div class="accountGrid"><input id="addressCity" placeholder="İl"><input id="addressDistrict" placeholder="İlçe"></div><input id="addressNeighborhood" placeholder="Mahalle"><textarea id="addressFull" placeholder="Açık adres, bina ve daire numarası"></textarea><textarea id="addressNote" placeholder="Teslimat notu (isteğe bağlı)"></textarea><button class="primary" onclick="saveAddress()">Adresi Kaydet</button><div id="addressList"></div></div><div id="ordersTab" style="display:none"><div id="orderList"></div></div></div></div></div>
 <div id="drawer" class="drawer" onclick="if(event.target===this)closeCart()">
   <aside class="cart">
     <div class="cartTop"><h2>Sepetim</h2><button class="close" onclick="closeCart()">Kapat</button></div>
     <div id="cartItems"></div>
-    <div id="total" class="total"></div>
-    <button class="wa" onclick="sendWhatsApp()">WhatsApp ile Sipariş Ver</button>
+    <div id="checkoutAddressWrap" style="display:none"><label class="muted">Teslimat adresi</label><select id="checkoutAddress" style="width:100%;padding:12px;border-radius:11px;margin:8px 0;background:#fff;color:#111"></select></div><div id="total" class="total"></div>
+    <button class="wa" onclick="createOrderAndWhatsApp()">Siparişi Oluştur ve WhatsApp’a Gönder</button>
   </aside>
 </div>
 
@@ -295,12 +300,28 @@ window.PRIME_CONFIG={
 };
 let db,products=[],active="Tümü",special="",currentReviewProduct=null,selectedRating=0,cart=JSON.parse(localStorage.getItem("primeCart")||"{}"),favorites=JSON.parse(localStorage.getItem("primeFavorites")||"[]");
 const cfg=window.PRIME_CONFIG;
+
+let currentUser=null,currentProfile=null,currentAddresses=[];
+async function initAuth(){const {data}=await db.auth.getSession();currentUser=data.session?.user||null;await refreshAccount();db.auth.onAuthStateChange(async(_e,session)=>{currentUser=session?.user||null;await refreshAccount()})}
+async function loginGoogle(){await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}})}
+async function logoutUser(){await db.auth.signOut();closeAccount()}
+function openAccount(){accountModal.classList.add('open');refreshAccount()} function closeAccount(){accountModal.classList.remove('open')}
+function showAccountTab(t){['profile','addresses','orders'].forEach(x=>document.getElementById(x+'Tab').style.display=x===t?'block':'none');if(t==='orders')loadOrders()}
+async function refreshAccount(){if(!db)return;loggedOutView.style.display=currentUser?'none':'block';loggedInView.style.display=currentUser?'block':'none';accountTopBtn.textContent=currentUser?'👤 Hesabım':'👤 Giriş Yap';if(!currentUser)return;userEmail.textContent=currentUser.email||'';let {data}=await db.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();currentProfile=data||{};profileName.value=currentProfile.full_name||currentUser.user_metadata?.full_name||'';profilePhone.value=currentProfile.phone||'';await loadAddresses()}
+async function saveProfile(){if(!currentUser)return;const row={id:currentUser.id,full_name:profileName.value.trim(),phone:profilePhone.value.trim(),email:currentUser.email,updated_at:new Date().toISOString()};const {error}=await db.from('profiles').upsert(row);alert(error?'Kaydedilemedi: '+error.message:'Bilgiler kaydedildi.');await refreshAccount()}
+async function loadAddresses(){if(!currentUser)return;const {data}=await db.from('addresses').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});currentAddresses=data||[];addressList.innerHTML=currentAddresses.map(a=>`<div class="addressCard"><b>${esc(a.title||'Adres')}</b><div>${esc(a.city||'')} / ${esc(a.district||'')}</div><div>${esc(a.neighborhood||'')} ${esc(a.full_address||'')}</div><div class="muted">${esc(a.note||'')}</div><button class="remove" onclick="deleteAddress('${a.id}')">Sil</button></div>`).join('')||'<p class="muted">Henüz kayıtlı adres yok.</p>'}
+async function saveAddress(){if(!currentUser)return alert('Önce giriş yapın.');if(!addressCity.value.trim()||!addressDistrict.value.trim()||!addressFull.value.trim())return alert('İl, ilçe ve açık adres zorunludur.');const {error}=await db.from('addresses').insert({user_id:currentUser.id,title:addressTitle.value.trim()||'Ev',city:addressCity.value.trim(),district:addressDistrict.value.trim(),neighborhood:addressNeighborhood.value.trim(),full_address:addressFull.value.trim(),note:addressNote.value.trim()});if(error)return alert(error.message);['addressTitle','addressCity','addressDistrict','addressNeighborhood','addressFull','addressNote'].forEach(id=>document.getElementById(id).value='');await loadAddresses()}
+async function deleteAddress(id){if(confirm('Adres silinsin mi?')){await db.from('addresses').delete().eq('id',id);await loadAddresses()}}
+async function loadOrders(){const {data}=await db.from('orders').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});orderList.innerHTML=(data||[]).map(o=>`<div class="addressCard"><b>Sipariş #${esc(o.order_no)}</b><div>${new Date(o.created_at).toLocaleString('tr-TR')}</div><div>${money(o.total)}</div><div class="badge">${esc(o.status||'Yeni')}</div></div>`).join('')||'<p class="muted">Henüz siparişiniz yok.</p>'}
+async function createOrderAndWhatsApp(){if(!currentUser){openAccount();return alert('Sipariş vermek için Google ile giriş yapın.')}await refreshAccount();if(!currentProfile?.phone)return alert('Lütfen Hesabım bölümünden telefon numaranızı kaydedin.');if(!currentAddresses.length){openAccount();showAccountTab('addresses');return alert('Lütfen teslimat adresinizi ekleyin.')}const address=currentAddresses.find(a=>String(a.id)===String(checkoutAddress.value))||currentAddresses[0];let items=[],total=0;Object.entries(cart).forEach(([id,qty])=>{const p=products.find(x=>Number(x.id)===Number(id));if(p){items.push({product_id:p.id,name:p.name,brand:p.brand,price:Number(p.price),quantity:Number(qty)});total+=Number(p.price)*Number(qty)}});if(!items.length)return alert('Sepetiniz boş.');const orderNo=String(Date.now()).slice(-8);const {error}=await db.from('orders').insert({order_no:orderNo,user_id:currentUser.id,customer_name:currentProfile.full_name||currentUser.user_metadata?.full_name||'',phone:currentProfile.phone,email:currentUser.email,address_snapshot:address,items,total,status:'Yeni Sipariş'});if(error)return alert('Sipariş kaydedilemedi: '+error.message);await sendWhatsApp(orderNo,address);cart={};saveCart();closeCart();alert('Siparişiniz kaydedildi. Sipariş numaranız: '+orderNo)}
+
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function money(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(Number(n)||0)}
 function isNew(p){return p.created_at&&(Date.now()-new Date(p.created_at).getTime()<1000*60*60*24*30)}
 async function init(){
   db=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
   await load();
+  await initAuth();
   db.channel("products-live").on("postgres_changes",{event:"*",schema:"public",table:"products"},load).subscribe();
   setInterval(load,20000);
 }
@@ -449,10 +470,11 @@ function renderCart(){
   const cartTopBtn=document.getElementById("cartTopBtn");
   if(cartTopBtn) cartTopBtn.textContent=`🛒 Sepet (${count})`;
 }
-function openCart(){drawer.classList.add("open");renderCart()}
+function openCart(){drawer.classList.add("open");renderCart();renderCheckoutAddresses()}
 function closeCart(){drawer.classList.remove("open")}
-async function sendWhatsApp(){
-  const lines=["🛍️ *PRIME KOZMETİK*","","━━━━━━━━━━━━━━━━━━","","📦 *Sipariş Talebi*",""];
+function renderCheckoutAddresses(){const w=document.getElementById('checkoutAddressWrap'),sel=document.getElementById('checkoutAddress');if(!w||!sel)return;w.style.display=currentUser&&currentAddresses.length?'block':'none';sel.innerHTML=currentAddresses.map(a=>`<option value="${a.id}">${esc(a.title||'Adres')} — ${esc(a.city||'')} / ${esc(a.district||'')}</option>`).join('')}
+async function sendWhatsApp(orderNo,address){
+  const lines=["🛍️ *PRIME KOZMETİK*","","━━━━━━━━━━━━━━━━━━","",`📦 *Sipariş #${orderNo||"Yeni"}*`,"",`👤 ${currentProfile?.full_name||currentUser?.user_metadata?.full_name||"Müşteri"}`,`📞 ${currentProfile?.phone||""}`,address?`📍 ${address.city||""} / ${address.district||""} — ${address.neighborhood||""} ${address.full_address||""}`:"",""];
   let total=0,has=false;
   Object.entries(cart).forEach(([id,qty])=>{
     const p=products.find(x=>Number(x.id)===Number(id));if(!p)return;
