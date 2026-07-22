@@ -170,7 +170,10 @@ button{cursor:pointer}
 <div class="shell">
 <header class="topbar">
   <div><div class="brandLogo">PRIME KOZMETİK</div><div class="brandSub">Seçkin güzellik ve bakım ürünleri</div></div>
-  <button class="topAction" onclick="openCart()">🛒 Sepet</button>
+  <div style="display:flex;gap:8px">
+      <button id="favTopBtn" type="button" class="topAction">♡ Favorilerim (0)</button>
+      <button id="cartTopBtn" type="button" class="topAction" onclick="openCart()">🛒 Sepet (0)</button>
+    </div>
 </header>
 
 <section class="hero">
@@ -247,10 +250,12 @@ function showSpecial(type){special=type;active="Tümü";render();document.getEle
 function toggleFav(id){id=Number(id);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("primeFavorites",JSON.stringify(favorites));render()}
 function render(){
   const q=search.value.toLowerCase().trim(),s=sort.value;
+  const favTopBtn=document.getElementById("favTopBtn");
+  if(favTopBtn) favTopBtn.textContent=`${favorites.length ? "♥" : "♡"} Favorilerim (${favorites.length})`;
   const categories=["Tümü","✨ Yeni Gelenler","🤍 Favorilerim",...new Set(products.map(p=>p.category).filter(Boolean))];
   cats.innerHTML=categories.map(c=>{
     const on=(c===active)||((c==="✨ Yeni Gelenler"&&special==="new")||(c==="🤍 Favorilerim"&&special==="fav"));
-    return `<button class="pill ${on?'on':''}" onclick="chooseCategory(${JSON.stringify(c)})">${esc(c)}</button>`
+    return `<button type="button" class="pill ${on?'on':''}" data-category="${esc(c)}">${esc(c)}</button>`
   }).join("");
   let list=products.filter(p=>(active==="Tümü"||p.category===active)&&(`${p.brand} ${p.name} ${p.description} ${p.category}`).toLowerCase().includes(q));
   if(special==="new")list=list.filter(isNew);
@@ -271,7 +276,12 @@ function render(){
       <div class="meta"><div class="price">${money(p.price)}</div><div class="stock">● ${esc(p.stock||"Stokta")}</div></div>
       <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
     </div>
-  </article>`).join(""):'<div class="empty">Bu bölümde ürün bulunamadı.</div>';
+  </article>`).join(""):(special==="fav"
+    ?'<div class="empty"><div style="font-size:42px">♡</div><b>Henüz favori ürün seçmediniz.</b><div style="margin-top:8px">Ürünlerdeki kalp simgesine basarak favoriye ekleyebilirsiniz.</div></div>'
+    :'<div class="empty">Bu bölümde ürün bulunamadı.</div>');
+  document.querySelectorAll("[data-category]").forEach(btn=>{
+    btn.onclick=()=>chooseCategory(btn.dataset.category);
+  });
   renderCart();
 }
 function chooseCategory(c){
@@ -294,6 +304,8 @@ function renderCart(){
   cartItems.innerHTML=html||'<div class="empty">Sepetiniz boş.</div>';
   totalEl=document.getElementById("total");totalEl.textContent="Toplam: "+money(total);
   countEl=document.getElementById("count");countEl.textContent=count;
+  const cartTopBtn=document.getElementById("cartTopBtn");
+  if(cartTopBtn) cartTopBtn.textContent=`🛒 Sepet (${count})`;
 }
 function openCart(){drawer.classList.add("open");renderCart()}
 function closeCart(){drawer.classList.remove("open")}
@@ -311,8 +323,15 @@ function sendWhatsApp(){
   lines.push("━━━━━━━━━━━━━━━━━━","",`💰 *Toplam Tutar:* ${money(total)}`,"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
   window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
 }
+document.getElementById("favTopBtn").onclick=()=>showSpecial("fav");
 init();renderCart();
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister()));
+}
+if("caches" in window){
+  caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));
+}
 </script>
 </body>
 </html>
