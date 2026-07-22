@@ -1,0 +1,10 @@
+{
+  "name": "Prime Kozmetik",
+  "short_name": "Prime Kozmetik",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#111116",
+  "description": "Prime Kozmetik güncel ürün ve fiyat listesi",
+  "icons": []
+}

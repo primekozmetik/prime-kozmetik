@@ -1,0 +1,15 @@
+PRIME KOZMETİK MOBİL SİTE
+
+Yayınlamak için:
+1. Netlify Drop sayfasını aç.
+2. Bu ZIP dosyasını çıkar.
+3. 'prime_kozmetik_mobil_site' klasörünü Netlify ekranına sürükle.
+4. Sana verilen bağlantıyı müşterilere gönder.
+
+Özellikler:
+- Telefon, tablet ve bilgisayar uyumlu
+- Telefonda 2 sütunlu ürün görünümü
+- Altta sabit sepet butonu
+- Mobil sepet penceresi
+- WhatsApp sipariş gönderimi
+- Ana ekrana uygulama gibi eklenebilme
