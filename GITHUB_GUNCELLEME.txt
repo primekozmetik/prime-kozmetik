@@ -1,0 +1,11 @@
+GITHUB SİTESİNİ GÜNCELLEME
+
+1. GitHub'da primekozmetik/prime-kozmetik deposunu aç.
+2. Üstte "Dosya ekle" > "Dosyaları yükle" seç.
+3. Bu klasördeki index.html, manifest.webmanifest ve sw.js dosyalarını yükle.
+4. Aynı isimli dosyalar için GitHub değiştirme işlemi yapacaktır.
+5. Sayfanın altında "Değişiklikleri kaydet / Commit changes" butonuna bas.
+6. 1-3 dakika sonra siteyi yenile.
+
+Site:
+https://primekozmetik.github.io/prime-kozmetik/
