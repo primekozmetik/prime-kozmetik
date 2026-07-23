@@ -84,8 +84,7 @@ button{cursor:pointer}
   width:100%;min-height:48px;border-radius:13px;border:1px solid var(--line);
   background:#fff;color:#111;padding:12px 14px;outline:none
 }
-.quick{display:flex;gap:8px;overflow:auto;margin-top:10px;scrollbar-width:none}
-.quick::-webkit-scrollbar{display:none}
+.catalogLayout{display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start}.categorySidebar{position:sticky;top:168px;border:1px solid var(--line);border-radius:18px;background:rgba(11,11,14,.9);padding:12px}.quick{display:flex;flex-direction:column;gap:8px}.quick::-webkit-scrollbar{display:none}
 .pill{
   flex:0 0 auto;border:1px solid var(--line);background:#18181f;color:var(--muted);
   border-radius:999px;padding:10px 14px;font-weight:800;white-space:nowrap
@@ -156,6 +155,7 @@ button{cursor:pointer}
   .hero{grid-template-columns:1fr}.heroVisual{display:none}
 }
 @media(max-width:700px){
+  .catalogLayout{grid-template-columns:1fr}.categorySidebar{position:static}.quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .shell{padding:9px}.topbar{border-radius:15px}.brandLogo{font-size:19px}
   .hero{min-height:auto;padding:22px;border-radius:22px}.hero h1{font-size:31px}
   .features{grid-template-columns:1fr}.searchRow{grid-template-columns:1fr}
@@ -206,7 +206,7 @@ button{cursor:pointer}
 
 
 .accountModal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;display:none;align-items:center;justify-content:center;padding:16px}.accountModal.open{display:flex}.accountBox{width:min(680px,100%);max-height:92vh;overflow:auto;background:#111116;border:1px solid var(--line);border-radius:22px;padding:20px}.accountGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.accountBox input,.accountBox textarea,.accountBox select{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);margin:6px 0}.accountBox textarea{min-height:90px}.accountActions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.addressCard{border:1px solid var(--line);background:#191920;border-radius:14px;padding:12px;margin:10px 0}.muted{color:var(--muted);font-size:12px}@media(max-width:600px){.accountGrid{grid-template-columns:1fr}}
-</style>
+.wheelModal{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:120;display:none;align-items:center;justify-content:center;padding:16px}.wheelModal.open{display:flex}.wheelBox{width:min(520px,100%);background:#111116;border:1px solid var(--line);border-radius:24px;padding:22px;text-align:center}.wheel{width:300px;height:300px;max-width:78vw;max-height:78vw;border-radius:50%;margin:18px auto;background:conic-gradient(#d9b66f 0 60deg,#241f16 60deg 120deg,#f4dfae 120deg 180deg,#332a1b 180deg 240deg,#c99d4e 240deg 300deg,#17171d 300deg);border:8px solid #f4dfae;transition:transform 4s cubic-bezier(.12,.75,.18,1)}.wheelPointer{font-size:34px;margin-bottom:-22px;position:relative;z-index:2}.wheelSpin{width:100%}.wheelResult{font-size:20px;color:var(--gold2);font-weight:900;min-height:28px}</style>
 </head>
 <body>
 <div class="shell">
@@ -248,12 +248,12 @@ button{cursor:pointer}
       <option value="name">İsme göre</option>
     </select>
   </div>
-  <div id="cats" class="quick"></div>
 </section>
 
-<div class="sectionHead" id="products"><div><h2 id="sectionTitle">Tüm Ürünler</h2><span id="resultCount">Ürünler yükleniyor...</span></div></div>
-<main id="grid" class="grid"><div class="empty">Ürünler yükleniyor…</div></main>
+<div class="catalogLayout"><aside class="categorySidebar"><div id="cats" class="quick"></div></aside><section><div class="sectionHead" id="products"><div><h2 id="sectionTitle">Tüm Ürünler</h2><span id="resultCount">Ürünler yükleniyor...</span></div></div><main id="grid" class="grid"><div class="empty">Ürünler yükleniyor…</div></main></section></div>
 </div>
+
+<div id="wheelModal" class="wheelModal"><div class="wheelBox"><div class="wheelPointer">▼</div><div id="wheel" class="wheel"></div><div id="wheelResult" class="wheelResult"></div><button id="wheelSpin" class="primary wheelSpin" type="button">Çarkı Çevir</button></div></div>
 
 <button class="cartBtn" onclick="openCart()"><span>🛒 Sepetim</span><span><span id="count">0</span> ürün</span></button>
 
@@ -322,6 +322,7 @@ async function init(){
   db=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
   await load();
   await initAuth();
+  await checkPendingWheel();
   db.channel("products-live").on("postgres_changes",{event:"*",schema:"public",table:"products"},load).subscribe();
   setInterval(load,20000);
 }
@@ -354,7 +355,13 @@ async function openReviewModal(productId){
 }
 function closeReviewModal(){reviewModal.classList.remove("open")}
 function paintStars(){
-  document.querySelectorAll("#starPicker button").forEach(b=>b.classList.toggle("on",Number(b.dataset.star)<=selectedRating));
+  
+let activeWheel=null;
+async function checkPendingWheel(){if(!currentUser||!db)return;const {data}=await db.from("wheel_assignments").select("*").eq("user_id",currentUser.id).eq("status","pending").order("created_at",{ascending:false}).limit(1).maybeSingle();if(data){activeWheel=data;document.getElementById("wheelModal").classList.add("open")}}
+function wheelSound(){try{const a=new (window.AudioContext||window.webkitAudioContext)();let n=0;const t=setInterval(()=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=520+(n%5)*45;g.gain.value=.035;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.05);if(++n>35){clearInterval(t);setTimeout(()=>a.close(),200)}},90)}catch(e){}}
+document.getElementById("wheelSpin").addEventListener("click",async()=>{if(!activeWheel)return;const btn=document.getElementById("wheelSpin");btn.disabled=true;wheelSound();const prizes=["%5 İndirim","%10 İndirim","50 TL İndirim","Ücretsiz Kargo","Hediye Ürün","%15 İndirim"];const prize=prizes[Math.floor(Math.random()*prizes.length)];document.getElementById("wheel").style.transform=`rotate(${1800+Math.floor(Math.random()*360)}deg)`;setTimeout(async()=>{document.getElementById("wheelResult").textContent="🎉 "+prize+" kazandınız!";await db.from("wheel_assignments").update({status:"used",prize,used_at:new Date().toISOString()}).eq("id",activeWheel.id);setTimeout(()=>document.getElementById("wheelModal").classList.remove("open"),2500)},4100)});
+
+document.querySelectorAll("#starPicker button").forEach(b=>b.classList.toggle("on",Number(b.dataset.star)<=selectedRating));
 }
 async function loadReviews(){
   const {data,error}=await db.from("reviews").select("*").eq("product_id",currentReviewProduct.id).eq("is_approved",true).order("created_at",{ascending:false});
@@ -492,6 +499,12 @@ async function sendWhatsApp(orderNo,address){
   lines.push("━━━━━━━━━━━━━━━━━━","",`💰 *Toplam Tutar:* ${money(total)}`,"","━━━━━━━━━━━━━━━━━━","","Merhaba,","Yukarıdaki ürünleri sipariş vermek istiyorum.","","Stok durumu ve ödeme bilgisi hakkında dönüş sağlayabilir misiniz?","","Teşekkür ederim. 🌸");
   window.open(`https://wa.me/${cfg.WHATSAPP}?text=${encodeURIComponent(lines.join("\n"))}`,"_blank");
 }
+
+let activeWheel=null;
+async function checkPendingWheel(){if(!currentUser||!db)return;const {data}=await db.from("wheel_assignments").select("*").eq("user_id",currentUser.id).eq("status","pending").order("created_at",{ascending:false}).limit(1).maybeSingle();if(data){activeWheel=data;document.getElementById("wheelModal").classList.add("open")}}
+function wheelSound(){try{const a=new (window.AudioContext||window.webkitAudioContext)();let n=0;const t=setInterval(()=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=520+(n%5)*45;g.gain.value=.035;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.05);if(++n>35){clearInterval(t);setTimeout(()=>a.close(),200)}},90)}catch(e){}}
+document.getElementById("wheelSpin").addEventListener("click",async()=>{if(!activeWheel)return;const btn=document.getElementById("wheelSpin");btn.disabled=true;wheelSound();const prizes=["%5 İndirim","%10 İndirim","50 TL İndirim","Ücretsiz Kargo","Hediye Ürün","%15 İndirim"];const prize=prizes[Math.floor(Math.random()*prizes.length)];document.getElementById("wheel").style.transform=`rotate(${1800+Math.floor(Math.random()*360)}deg)`;setTimeout(async()=>{document.getElementById("wheelResult").textContent="🎉 "+prize+" kazandınız!";await db.from("wheel_assignments").update({status:"used",prize,used_at:new Date().toISOString()}).eq("id",activeWheel.id);setTimeout(()=>document.getElementById("wheelModal").classList.remove("open"),2500)},4100)});
+
 document.querySelectorAll("#starPicker button").forEach(btn=>{
   btn.onclick=()=>{selectedRating=Number(btn.dataset.star);paintStars()}
 });
