@@ -264,8 +264,8 @@ button{cursor:pointer}
 @media(max-width:370px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.name{font-size:12px}.price{font-size:15px}.topAction{font-size:11px}}
 
 
-.addToast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);z-index:120;color:#111116;background:#fff;border:1px solid rgba(0,0,0,.12);box-shadow:0 10px 30px rgba(0,0,0,.18);padding:16px 24px;border-radius:14px;font-size:20px;font-weight:900;opacity:0;pointer-events:none;transition:.2s ease;white-space:nowrap}.addToast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-@media(max-width:600px){.addToast{max-width:calc(100vw - 36px);white-space:normal;text-align:center;font-size:19px}}
+.addToast{position:fixed;left:14px;top:14px;z-index:120;color:#fff;background:#178a45;box-shadow:0 8px 24px rgba(0,0,0,.20);padding:11px 15px;border-radius:10px;font-size:15px;font-weight:900;opacity:0;pointer-events:none;transform:translateY(-12px);transition:.2s ease;white-space:nowrap}.addToast.show{opacity:1;transform:translateY(0)}
+@media(max-width:600px){.addToast{left:10px;top:10px;font-size:14px;padding:10px 13px;max-width:calc(100vw - 20px)}}
 </style>
 
 <style>
@@ -543,24 +543,18 @@ function chooseCategory(c){
   else{active=c;special=""}
   render();
 }
-let addToastDismissHandler=null;
+let addToastTimer=null;
 function hideAddToast(){
   const toast=document.getElementById("addToast");
   if(toast)toast.classList.remove("show");
-  if(addToastDismissHandler){
-    document.removeEventListener("pointerdown",addToastDismissHandler,true);
-    addToastDismissHandler=null;
-  }
+  if(addToastTimer){clearTimeout(addToastTimer);addToastTimer=null;}
 }
 function showAddToast(){
   const toast=document.getElementById("addToast");
   if(!toast)return;
   hideAddToast();
-  toast.classList.add("show");
-  setTimeout(()=>{
-    addToastDismissHandler=()=>hideAddToast();
-    document.addEventListener("pointerdown",addToastDismissHandler,{once:true,capture:true});
-  },80);
+  requestAnimationFrame(()=>toast.classList.add("show"));
+  addToastTimer=setTimeout(hideAddToast,1500);
 }
 function addCart(id){cart[id]=(cart[id]||0)+1;saveCart();showAddToast()}
 function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart()}
