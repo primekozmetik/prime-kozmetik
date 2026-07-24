@@ -385,6 +385,196 @@ function toggleAddressForm(){const f=document.getElementById('addressForm');if(!
 async function saveAddress(){if(!currentUser)return alert('Önce giriş yapın.');if(!addressCity.value.trim()||!addressDistrict.value.trim()||!addressFull.value.trim())return alert('İl, ilçe ve açık adres zorunludur.');const {error}=await db.from('addresses').insert({user_id:currentUser.id,title:addressTitle.value.trim()||'Ev',city:addressCity.value.trim(),district:addressDistrict.value.trim(),neighborhood:addressNeighborhood.value.trim(),full_address:addressFull.value.trim(),note:addressNote.value.trim()});if(error)return alert(error.message);['addressTitle','addressCity','addressDistrict','addressNeighborhood','addressFull','addressNote'].forEach(id=>document.getElementById(id).value='');await loadAddresses()}
 async function deleteAddress(id){if(confirm('Adres silinsin mi?')){await db.from('addresses').delete().eq('id',id);await loadAddresses()}}
 async function loadOrders(){const {data}=await db.from('orders').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});orderList.innerHTML=(data||[]).map(o=>`<div class="orderCard"><div class="orderTop"><div><b>Sipariş #${esc(o.order_no)}</b><div class="muted">${new Date(o.created_at).toLocaleString('tr-TR')}</div><div style="font-size:20px;font-weight:900;color:var(--gold2);margin-top:5px">${money(o.total)}</div></div><span class="statusDone">${esc(o.status||'Tamamlandı')} ✓</span></div><div class="orderProgress"><span></span></div></div>`).join('')||'<p class="muted">Henüz siparişiniz yok.</p>'}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function money(n){return new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY"}).format(Number(n)||0)}
+function isNew(p){return p.created_at&&(Date.now()-new Date(p.created_at).getTime()<1000*60*60*24*30)}
+async function init(){
+  db=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_ANON_KEY);
+  initLiveAds();
+  await load();
+  await initAuth();
+  db.channel("products-live").on("postgres_changes",{event:"*",schema:"public",table:"products"},load).subscribe();
+  setInterval(load,20000);
+}
+async function load(){
+  let allProducts=[];
+  let from=0;
+  const pageSize=1000;
+  while(true){
+    const {data,error}=await db.from("products").select("*").order("created_at",{ascending:false}).range(from,from+pageSize-1);
+    if(error){grid.innerHTML='<div class="empty">Ürünler alınamadı. Lütfen bağlantıyı kontrol edin.</div>';return}
+    const batch=data||[];
+    allProducts.push(...batch);
+    if(batch.length<pageSize) break;
+    from+=pageSize;
+  }
+  products=allProducts;render();
+}
+function showSpecial(type){special=type;active="Tümü";render();document.getElementById("products").scrollIntoView()}
+function toggleFav(id){id=Number(id);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("primeFavorites",JSON.stringify(favorites));render()}
+
+async function getRatingSummary(productId){
+  const {data,error}=await db.from("reviews").select("rating").eq("product_id",productId).eq("is_approved",true);
+  if(error||!data?.length)return {avg:0,count:0};
+  const avg=data.reduce((s,r)=>s+Number(r.rating||0),0)/data.length;
+  return {avg,count:data.length};
+}
+function openSupport(){
+  const text=encodeURIComponent("Merhaba, Prime Kozmetik ürünleri hakkında destek almak istiyorum.");
+  window.open(`https://wa.me/${cfg.WHATSAPP}?text=${text}`,"_blank");
+}
+async function openReviewModal(productId){
+  currentReviewProduct=products.find(p=>Number(p.id)===Number(productId));
+  if(!currentReviewProduct)return;
+  selectedRating=0;paintStars();
+  reviewProductName.textContent=currentReviewProduct.name;
+  reviewName.value="";reviewText.value="";reviewStatus.textContent="";
+  reviewModal.classList.add("open");
+  await loadReviews();
+}
+function closeReviewModal(){reviewModal.classList.remove("open")}
+function paintStars(){
+  document.querySelectorAll("#starPicker button").forEach(b=>b.classList.toggle("on",Number(b.dataset.star)<=selectedRating));
+}
+async function loadReviews(){
+  const {data,error}=await db.from("reviews").select("*").eq("product_id",currentReviewProduct.id).eq("is_approved",true).order("created_at",{ascending:false});
+  const rows=data||[];
+  const avg=rows.length?rows.reduce((s,r)=>s+Number(r.rating||0),0)/rows.length:0;
+  ratingSummary.textContent=rows.length?`★ ${avg.toFixed(1)} / 5 · ${rows.length} yorum`:"Henüz yorum yapılmamış.";
+  reviewList.innerHTML=rows.length?rows.map(r=>`<div class="reviewItem">
+    <div class="reviewStars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
+    <b>${esc(r.customer_name||"Müşteri")}</b>
+    <div>${esc(r.comment||"")}</div>
+    <div class="reviewMeta">${new Date(r.created_at).toLocaleDateString("tr-TR")}</div>
+  </div>`).join(""):'<div class="empty">Bu ürün için ilk yorumu siz yapın.</div>';
+}
+async function submitReview(){
+  if(!currentReviewProduct)return;
+  const name=reviewName.value.trim(),comment=reviewText.value.trim();
+  if(!selectedRating)return reviewStatus.textContent="Lütfen 1 ile 5 arasında yıldız seçin.";
+  if(!name)return reviewStatus.textContent="Lütfen adınızı yazın.";
+  if(!comment)return reviewStatus.textContent="Lütfen yorumunuzu yazın.";
+  reviewStatus.textContent="Yorum gönderiliyor...";
+  const {error}=await db.from("reviews").insert({
+    product_id:currentReviewProduct.id,
+    customer_name:name,
+    rating:selectedRating,
+    comment,
+    is_approved:true
+  });
+  if(error){reviewStatus.textContent="Yorum gönderilemedi: "+error.message;return}
+  reviewStatus.textContent="Yorumunuz yayınlandı. Teşekkür ederiz.";
+  reviewName.value="";reviewText.value="";selectedRating=0;paintStars();
+  await loadReviews();
+}
+
+
+function stockNumber(p){
+  const raw=String(p.stock??"").replace(",",".");
+  const m=raw.match(/\d+(\.\d+)?/);
+  return m?Number(m[0]):NaN;
+}
+function stockHtml(p){
+  const n=stockNumber(p);
+  if(Number.isFinite(n)){
+    if(n<=0)return '<div class="outStock">Tükendi</div>';
+    if(n<=5)return `<div class="lowStock">⚠ Son ${Math.floor(n)} adet kaldı</div>`;
+    return `<div class="stock">● ${Math.floor(n)} adet stokta</div>`;
+  }
+  return `<div class="stock">● ${esc(p.stock||"Stokta")}</div>`;
+}
+function isBestSeller(p){
+  return Number(p.sold_count||0)>0;
+}
+
+function render(){
+  const q=search.value.toLowerCase().trim(),s=sort.value;
+  const favTopBtn=document.getElementById("favTopBtn");
+  if(favTopBtn) favTopBtn.textContent=`${favorites.length ? "♥" : "♡"} Favorilerim (${favorites.length})`;
+  const categories=["Tümü","🔥 Çok Satanlar","✨ Yeni Gelenler","🤍 Favorilerim",...new Set(products.map(p=>p.category).filter(Boolean))];
+  const catCount=c=>{
+    if(c==="Tümü") return products.length;
+    if(c==="🔥 Çok Satanlar") return products.filter(isBestSeller).length;
+    if(c==="✨ Yeni Gelenler") return products.filter(isNew).length;
+    if(c==="🤍 Favorilerim") return favorites.length;
+    return products.filter(p=>p.category===c).length;
+  };
+  cats.innerHTML=categories.map(c=>{
+    const on=(c===active)||((c==="🔥 Çok Satanlar"&&special==="best")||(c==="✨ Yeni Gelenler"&&special==="new")||(c==="🤍 Favorilerim"&&special==="fav"));
+    const label=c==="Tümü"?"Tüm Ürünler":c;
+    return `<button type="button" class="pill ${on?'on':''}" data-category="${esc(c)}"><span>${esc(label)}</span><span class="catCount">${catCount(c)}</span></button>`
+  }).join("");
+  let list=products.filter(p=>(active==="Tümü"||p.category===active)&&(`${p.brand} ${p.name} ${p.description} ${p.category}`).toLowerCase().includes(q));
+  if(special==="best")list=list.filter(isBestSeller).sort((a,b)=>Number(b.sold_count||0)-Number(a.sold_count||0));
+  if(special==="new")list=list.filter(isNew);
+  if(special==="fav")list=list.filter(p=>favorites.includes(Number(p.id)));
+  if(s==="low")list.sort((a,b)=>Number(a.price)-Number(b.price));
+  if(s==="high")list.sort((a,b)=>Number(b.price)-Number(a.price));
+  if(s==="name")list.sort((a,b)=>String(a.name).localeCompare(String(b.name),"tr"));
+  sectionTitle.textContent=special==="best"?"Çok Satanlar":special==="new"?"Yeni Gelenler":special==="fav"?"Favorilerim":active==="Tümü"?"Tüm Ürünler":active;
+  resultCount.textContent=list.length+" ürün";
+  grid.innerHTML=list.length?list.map(p=>`<article class="card">
+    <div class="badges">${isBestSeller(p)?'<span class="badge bestBadge">ÇOK SATAN</span>':''}${isNew(p)?'<span class="badge">YENİ</span>':''}</div>
+    <button class="fav ${favorites.includes(Number(p.id))?'on':''}" onclick="toggleFav(${p.id})">${favorites.includes(Number(p.id))?'♥':'♡'}</button>
+    <div class="pic">${p.image?`<img src="${esc(p.image)}" alt="${esc(p.name)}">`:"✦"}</div>
+    <div class="content">
+      <div class="brand">${esc(p.brand)}</div>
+      <div class="name">${esc(p.name)}</div>
+      <div class="desc">${esc(p.description)}</div>
+      <div class="meta"><div class="price">${money(p.price)}</div>${stockHtml(p)}</div>
+      <div class="ratingLine">★★★★★ <span>Yorumları gör</span></div>
+      <button class="reviewBtn" onclick="openReviewModal(${p.id})">⭐ Yorumlar ve Puanlama</button>
+      <button class="add" onclick="addCart(${p.id})">Sepete Ekle</button>
+    </div>
+  </article>`).join(""):(special==="fav"
+    ?'<div class="empty"><div style="font-size:42px">♡</div><b>Henüz favori ürün seçmediniz.</b><div style="margin-top:8px">Ürünlerdeki kalp simgesine basarak favoriye ekleyebilirsiniz.</div></div>'
+    :'<div class="empty">Bu bölümde ürün bulunamadı.</div>');
+  document.querySelectorAll("[data-category]").forEach(btn=>{
+    btn.onclick=()=>chooseCategory(btn.dataset.category);
+  });
+  renderCart();
+}
+function chooseCategory(c){
+  if(c==="🔥 Çok Satanlar"){special="best";active="Tümü"}
+  else if(c==="✨ Yeni Gelenler"){special="new";active="Tümü"}
+  else if(c==="🤍 Favorilerim"){special="fav";active="Tümü"}
+  else{active=c;special=""}
+  render();
+}
+let addToastTimer=null;
+function hideAddToast(){
+  const toast=document.getElementById("addToast");
+  if(toast)toast.classList.remove("show");
+  if(addToastTimer){clearTimeout(addToastTimer);addToastTimer=null;}
+}
+function showAddToast(){
+  const toast=document.getElementById("addToast");
+  if(!toast)return;
+  hideAddToast();
+  requestAnimationFrame(()=>toast.classList.add("show"));
+  addToastTimer=setTimeout(hideAddToast,1500);
+}
+function addCart(id){cart[id]=(cart[id]||0)+1;saveCart();showAddToast()}
+function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart()}
+function removeItem(id){delete cart[id];saveCart()}
+function saveCart(){localStorage.setItem("primeCart",JSON.stringify(cart));renderCart()}
+function renderCart(){
+  let total=0,count=0,html="";
+  Object.entries(cart).forEach(([id,qty])=>{
+    const p=products.find(x=>Number(x.id)===Number(id));if(!p)return;
+    total+=Number(p.price)*qty;count+=qty;
+    html+=`<div class="cartItem"><div class="cartInfo">${p.image?`<img class="thumb" src="${esc(p.image)}" alt="">`:''}<div><b>${esc(p.name)}</b><div class="brand">${esc(p.brand)}</div><div class="qty"><button onclick="changeQty(${id},-1)">−</button><b>${qty}</b><button onclick="changeQty(${id},1)">+</button></div></div></div><button class="remove" onclick="removeItem(${id})">Sil</button></div>`
+  });
+  cartItems.innerHTML=html||'<div class="empty">Sepetiniz boş.</div>';
+  totalEl=document.getElementById("total");totalEl.textContent="Toplam: "+money(total);
+  countEl=document.getElementById("count");countEl.textContent=count;
+  const cartTopBtn=document.getElementById("cartTopBtn");
+  if(cartTopBtn) cartTopBtn.textContent=`🛒 Sepet (${count})`;
+}
+function openCart(){drawer.classList.add("open");renderCart();renderCheckoutAddresses()}
+function closeCart(){drawer.classList.remove("open")}
+function renderCheckoutAddresses(){const w=document.getElementById('checkoutAddressWrap'),sel=document.getElementById('checkoutAddress');if(!w||!sel)return;w.style.display=currentUser&&currentAddresses.length?'block':'none';sel.innerHTML=currentAddresses.map(a=>`<option value="${a.id}">${esc(a.title||'Adres')} — ${esc(a.city||'')} / ${esc(a.district||'')}</option>`).join('')}
+
 async function loadActiveWheelReward(){
   activeWheelReward=null;
   if(!db||!currentUser){renderCart();return}
