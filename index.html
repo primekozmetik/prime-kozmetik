@@ -566,7 +566,18 @@ function renderCart(){
     html+=`<div class="cartItem"><div class="cartInfo">${p.image?`<img class="thumb" src="${esc(p.image)}" alt="">`:''}<div><b>${esc(p.name)}</b><div class="brand">${esc(p.brand)}</div><div class="qty"><button onclick="changeQty(${id},-1)">−</button><b>${qty}</b><button onclick="changeQty(${id},1)">+</button></div></div></div><button class="remove" onclick="removeItem(${id})">Sil</button></div>`
   });
   cartItems.innerHTML=html||'<div class="empty">Sepetiniz boş.</div>';
-  totalEl=document.getElementById("total");totalEl.textContent="Toplam: "+money(total);
+  const discount=wheelDiscount(total), shipping=wheelShipping(), grand=Math.max(0,total-discount)+shipping;
+  let rewardHtml='';
+  if(activeWheelReward?.reward){
+    const reward=String(activeWheelReward.reward);
+    rewardHtml=`<div style="margin-top:18px;padding:14px 16px;border:1px solid #9d8448;border-radius:14px;background:#17150f;color:#f3d98d;font-weight:800">🎁 Çark Hediyesi: ${esc(reward)}</div>`;
+    if(wheelGift())rewardHtml+=`<div style="margin-top:8px;color:#ddd">Siparişinize 1 adet satıcının hediyesi eklenecek.</div>`;
+  }
+  const oldSummary=document.getElementById('wheelCartSummary'); if(oldSummary) oldSummary.remove();
+  const summary=document.createElement('div'); summary.id='wheelCartSummary';
+  summary.innerHTML=`${rewardHtml}<div style="margin-top:18px;line-height:1.8;color:#ddd">Ara toplam: <b>${money(total)}</b><br>${discount?`Çark indirimi: <b>-${money(discount)}</b><br>`:''}Kargo: <b>${shipping===0?'Ücretsiz':money(shipping)}</b></div>`;
+  cartItems.insertAdjacentElement('afterend',summary);
+  totalEl=document.getElementById("total");totalEl.textContent="Ödenecek Tutar: "+money(grand);
   countEl=document.getElementById("count");countEl.textContent=count;
   const cartTopBtn=document.getElementById("cartTopBtn");
   if(cartTopBtn) cartTopBtn.textContent=`🛒 Sepet (${count})`;
