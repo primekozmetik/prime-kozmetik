@@ -602,7 +602,7 @@ function wheelDiscount(subtotal){
   if(r==='%10 İndirim')return Math.round(subtotal*0.10*100)/100;
   return 0;
 }
-function wheelShipping(){return String(activeWheelReward?.reward||'')==='Kargo Bedava'?0:75}
+function wheelShipping(){const r=String(activeWheelReward?.reward||'').trim().toLocaleLowerCase('tr-TR');return (r==='kargo bedava'||r==='ücretsiz kargo'||r==='kargo ücretsiz')?0:75}
 function wheelGift(){return String(activeWheelReward?.reward||'')==='Satıcının Hediyesi'}
 async function redeemActiveWheel(orderNo){
   if(!activeWheelReward?.id)return;
