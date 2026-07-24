@@ -263,6 +263,9 @@ button{cursor:pointer}
 }
 @media(max-width:370px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.name{font-size:12px}.price{font-size:15px}.topAction{font-size:11px}}
 
+
+.addToast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);z-index:120;background:#111116;color:#f5d98a;border:1px solid rgba(245,217,138,.45);box-shadow:0 12px 35px rgba(0,0,0,.45);padding:13px 18px;border-radius:999px;font-weight:800;opacity:0;pointer-events:none;transition:.25s ease;white-space:nowrap}.addToast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:600px){.addToast{bottom:84px;max-width:calc(100vw - 28px);white-space:normal;text-align:center}}
 </style>
 </head>
 <body>
@@ -345,6 +348,7 @@ button{cursor:pointer}
 </div>
 
 <div id="accountModal" class="accountModal" onclick="if(event.target===this)closeAccount()"><div class="accountBox"><div class="accountHead"><div class="accountTitle"><div class="accountIcon">♙</div><div><h2>Hesabım</h2><div class="muted">Prime ayrıcalıklarını yönetin</div></div></div><button class="accountClose" onclick="closeAccount()">×</button></div><div class="accountBody"><div id="loggedOutView"><div class="accountPanel" style="text-align:center;padding:32px"><h3>Prime hesabınıza giriş yapın</h3><p class="muted">Siparişlerinizi, adreslerinizi ve favorilerinizi tek yerden yönetin.</p><button class="primary" onclick="loginGoogle()">Google ile Güvenli Giriş</button></div></div><div id="loggedInView" style="display:none"><div class="accountHero"><div class="avatar" id="accountAvatar">P</div><div><div class="accountWelcome" id="accountWelcome">Prime Müşterisi</div><div id="userEmail" class="accountEmail"></div></div></div><div class="accountActions"><button class="secondary accountTabBtn active" data-tab="profile" onclick="showAccountTab('profile')">👤 Profilim</button><button class="secondary accountTabBtn" data-tab="addresses" onclick="showAccountTab('addresses')">📍 Adreslerim</button><button class="secondary accountTabBtn" data-tab="orders" onclick="showAccountTab('orders')">📦 Siparişlerim</button><button class="close" onclick="logoutUser()">↪ Çıkış Yap</button></div><div id="profileTab" class="accountPanel"><h3>Profil Bilgilerim</h3><div class="accountGrid"><input id="profileName" placeholder="Ad Soyad"><input id="profilePhone" placeholder="Telefon"></div><button class="primary" onclick="saveProfile()">Bilgileri Kaydet</button></div><div id="addressesTab" class="accountPanel" style="display:none"><h3>Teslimat Adreslerim</h3><input id="addressTitle" placeholder="Adres başlığı (Ev, İş)"><div class="accountGrid"><input id="addressCity" placeholder="İl"><input id="addressDistrict" placeholder="İlçe"></div><input id="addressNeighborhood" placeholder="Mahalle"><textarea id="addressFull" placeholder="Açık adres, bina ve daire numarası"></textarea><textarea id="addressNote" placeholder="Teslimat notu"></textarea><button class="primary" onclick="saveAddress()">Adresi Kaydet</button><div id="addressList"></div></div><div id="ordersTab" class="accountPanel" style="display:none"><h3>Siparişlerim</h3><div id="orderList"></div></div><div class="secureLine">🔒 Hesabınız güvende. Güvenli alışverişin keyfini çıkarın.</div></div></div></div></div>
+<div id="addToast" class="addToast">✓ Sepete eklendi</div>
 <div id="drawer" class="drawer" onclick="if(event.target===this)closeCart()">
   <aside class="cart">
     <div class="cartTop"><h2>Sepetim</h2><button class="close" onclick="closeCart()">Kapat</button></div>
@@ -525,7 +529,15 @@ function chooseCategory(c){
   else{active=c;special=""}
   render();
 }
-function addCart(id){cart[id]=(cart[id]||0)+1;saveCart();openCart()}
+let addToastTimer;
+function showAddToast(){
+  const toast=document.getElementById("addToast");
+  if(!toast)return;
+  toast.classList.add("show");
+  clearTimeout(addToastTimer);
+  addToastTimer=setTimeout(()=>toast.classList.remove("show"),1800);
+}
+function addCart(id){cart[id]=(cart[id]||0)+1;saveCart();showAddToast()}
 function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];saveCart()}
 function removeItem(id){delete cart[id];saveCart()}
 function saveCart(){localStorage.setItem("primeCart",JSON.stringify(cart));renderCart()}
